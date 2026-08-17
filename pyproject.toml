@@ -18,6 +18,8 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.0.0",
     "python-dotenv>=1.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.0",
 ]
 
 [project.optional-dependencies]
@@ -30,7 +32,7 @@ awt = "cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["harness*", "memory*", "pipeline*", "agents*", "graphs*", "tools*"]
+include = ["harness*", "memory*", "pipeline*", "agents*", "graphs*", "tools*", "api*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
