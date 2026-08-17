@@ -91,7 +91,7 @@ class ModelRegistry:
                 else:
                     logger.warning("Backend %s unhealthy", backend.backend_type.value)
             except Exception as exc:
-                logger.exception("Discovery failed for %s: %s", backend.backend_type, exp)
+                logger.exception("Discovery failed for %s: %s", backend.backend_type, exc)
         return list(self._models.values())
 
     def get(self, model_id: str) -> Optional[ModelInfo]:
