@@ -4,106 +4,34 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentic-workflow-tdd"
-version = "0.1.0"
-description = "An agentic TDD system with LLM-powered code generation and verification"
+version = "0.2.0"
+description = "Local-first multi-agent TDD harness with red-before-green and unified local model backends"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 requires-python = ">=3.10"
-authors = [
-        {name = "JD Giles", email = "jdgs26@example.com"}
-]
-classifiers = [
-        "Development Status :: 3 - Alpha",
-            "Intended Audience :: Developers",
-                "License :: OSI Approved :: MIT License",
-                    "Programming Language :: Python :: 3",
-                        "Programming Language :: Python :: 3.10",
-                            "Programming Language :: Python :: 3.11",
-                                "Programming Language :: Python :: 3.12",
-]
-
-keywords = [
-        "ai",
-            "agents",
-                "tdd",
-                    "llm",
-                        "workflow",
-                            "test-driven-development",
-                                "langgraph",
-                                    "autogen",
-]
-
+authors = [{ name = "JD Giles" }]
+keywords = ["ai", "agents", "tdd", "llm", "ollama", "llamacpp", "mlx", "langgraph"]
 dependencies = [
-        "langgraph>=0.2.0",
-            "langchain>=0.3.0",
-                "langchain-community>=0.3.0",
-                    "pyautogen>=0.2.0",
-                        "ollama>=0.1.0",
-                            "pytest>=7.4.0",
-                                "pytest-asyncio>=0.21.0",
-                                    "pytest-cov>=4.1.0",
-                                        "playwright>=1.40.0",
-                                            "redis>=5.0.0",
-                                                "click>=8.1.0",
-                                                    "rich>=13.0.0",
-                                                        "pydantic>=2.0.0",
-                                                            "pydantic-settings>=2.0.0",
-                                                                "httpx>=0.25.0",
-                                                                    "python-dotenv>=1.0.0",
-                                                                        "pydantic>=2.0.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-        "mypy>=1.5.0",
-            "black>=23.0.0",
-                "ruff>=0.1.0",
-                    "isort>=5.12.0",
-]
+ollama = ["ollama>=0.1.0"]
+langgraph = ["langgraph>=0.2.0", "langchain>=0.3.0"]
+dev = ["pytest>=7.4.0", "pytest-asyncio>=0.21.0", "black>=23.0.0", "ruff>=0.1.0", "mypy>=1.5.0"]
 
 [project.scripts]
-awt = "src.cli.main:cli"
-
-[project.urls]
-"Homepage" = "https://github.com/jdgiles26/agentic-workflow-tdd"
-"Bug Tracker" = "https://github.com/jdgiles26/agentic-workflow-tdd/issues"
+awt = "cli:cli"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-src = ["py.typed"]
+where = ["."]
+include = ["harness*", "memory*", "pipeline*", "agents*", "graphs*", "tools*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = "test_*.py"
-python_classes = "Test*"
-python_functions = "test_*"
 asyncio_mode = "auto"
-addopts = "-v --tb=short"
-
-[tool.black]
-line-length = 88
-target-version = ["py310", "py311", "py312"]
-include = "\\.pyi?$"
-
-[tool.ruff]
-target-version = "py310"
-line-length = 88
-select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
-ignore = ["E501"]
-
-[tool.ruff.isort]
-known-first-party = ["src"]
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
-]
-]
-]
-]
-]

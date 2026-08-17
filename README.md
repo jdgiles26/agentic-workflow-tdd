@@ -1,213 +1,74 @@
-# agentic-workflow-tdd
-AI-driven Test-Driven Development platform orchestrating specialized agents (Backend, Frontend, Edge Case, UI, Integration) withlocal LLMs (ollama, llama.cpp) for automated test generation and execution
-gentic Workflow TDD System
-Overview
-The Agentic Workflow TDD System is a comprehensive framework for managing software development tasks using a Test-Driven Development (TDD) approach with multi-agent collaboration. The system orchestrates autonomous agents through a structured workflow state machine, ensuring rigorous testing and certification of each task before progression.
+# Agentic Workflow TDD (AWT)
 
-System Architecture
-Core Components
-Workflow State Manager: Manages task states and transitions using a SQLite database
-CLI Interface: Click-based command-line interface for workflow management
-Agent Framework: PyAutoGen-based multi-agent system for task execution
-LLM Client: Ollama integration for local LLM inference
-Browser Automation: Playwright for web-based task execution
-Technology Stack
-Language: Python 3.10+
-Workflow Orchestration: LangGraph, LangChain
-Multi-Agent Framework: PyAutoGen (AG2)
-LLM Integration: Ollama (llama3.1:8b, codellama:7b, mistral:7b)
-Testing: pytest, pytest-asyncio, pytest-cov
-Browser Automation: Playwright
-Database: SQLite for persistence, Redis for caching
-CLI: Click + Rich for terminal UI
-TDD Workflow States
-The system implements a five-state workflow with a rejection loop:
+**Local-first multi-agent Test-Driven Development harness** with strict red-before-green enforcement, unified local model backends (Ollama · llama.cpp/GGUF · MLX), and a modern monitoring dashboard.
 
-SPEC → TEST-FAIL → CODE → TEST-PASS → CERTIFY
-                    ↑                   ↓
-                                        └────── REJECTED ────┘
-                                        ```
+```text
+SPEC → TEST-FAIL → CODE → TEST-PASS → CERTIFY → DONE
+         ↑                              ↓
+         └──────── REJECTED ────────────┘
+```
 
-                                        ### State Descriptions
+No implementation agent may write under `src/` until a genuine `red-report.json` exists.
 
-                                        1. **SPEC**: Task specification and requirements definition
-                                        2. **TEST-FAIL**: Test cases defined but failing (expected)
-                                        3. **CODE**: Implementation in progress
-                                        4. **TEST-PASS**: All tests passing
-                                        5. **CERTIFY**: Ready for certification review
-                                        6. **REJECTED**: Certification failed, returns to SPEC
+## Features
 
-                                        ## Installation
+- **Unified local model harness** — drop-in support for Ollama, llama.cpp (GGUF), and MLX (Apple Silicon)
+- **Red-before-green gate** — hard enforcement + ownership matrix (agentic-pipeline skill)
+- **Multi-agent reliability** — confidence scores, grounding, HITL certification
+- **Modern dashboard** — Next.js UI with live status, progressive disclosure, and clear empty/loading/error states
+- **Strict state machine** — illegal transitions are rejected
+- **Observability ready** — structured history + report artifacts
 
-                                        ```bash
-                                        # Clone the repository
-                                        git clone https://github.com/jdgiles26/agentic-workflow-tdd
-                                        cd agentic-workflow-tdd
+## Quick start
 
-                                        # Install dependencies
-                                        pip install -r requirements.txt
+### Python / agents
 
-                                        # Install package in editable mode
-                                        pip install -e .
-                                        ```
+```bash
+cd agentic-workflow-tdd
+python -m venv .venv
+source .venv/bin/activate   # or .venv\Scripts\activate on Windows
+pip install -e .
+```
 
-                                        ## CLI Usage
+### Dashboard (UI)
 
-                                        ### Initialize Project
+```bash
+cd ui
+npm install
+npm run dev
+```
 
-                                        ```bash
-                                        awt init
-                                        ```
+Open http://localhost:3000
 
-                                        ### Start New Task
+### Local models
 
-                                        ```bash
-                                        awt start "Task name" "Task description"
-                                        ```
+| Backend   | How to run                                      |
+|-----------|-------------------------------------------------|
+| Ollama    | `ollama serve` then `ollama pull llama3.1:8b`   |
+| llama.cpp | `llama-server --model your.gguf --port 8080`    |
+| MLX       | Install `mlx-lm` on Apple Silicon               |
 
-                                        ### Set Specification
+## Project layout
 
-                                        ```bash
-                                        awt spec <task_id> "Task specification details"
-                                        ```
+```
+agents/          specialized agent roles
+graphs/          LangGraph state machines
+harness/         Ollama + llama.cpp + MLX backends
+memory/          workflow state store
+pipeline/        ownership + red-before-green gates
+tools/           Playwright, test runners, etc.
+ui/              Next.js dashboard
+tests/           unit / integration / e2e + reports
+```
 
-                                        ### Set Test Cases
+## Core principles (enforced)
 
-                                        ```bash
-                                        awt tests <task_id> "Test case definitions"
-                                        ```
+1. **Spec → Test → Code** — never reorder
+2. **Red report required** before any `src/` write
+3. **Implementation agents never touch tests**
+4. **Human gates** for certification
+5. **Ownership matrix** rejects out-of-scope writes
 
-                                        ### Set Implementation Code
+## License
 
-                                        ```bash
-                                        awt code <task_id> "Implementation code"
-                                        ```
-
-                                        ### Transition State
-
-                                        ```bash
-                                        awt transition <task_id> <new_state>
-                                        ```
-
-                                        ### Request Certification
-
-                                        ```bash
-                                        awt certify <task_id>
-                                        ```
-
-                                        ### Approve/Reject Certification
-
-                                        ```bash
-                                        awt certify_decision <task_id> approve|reject "Decision notes"
-                                        ```
-
-                                        ### View Status
-
-                                        ```bash
-                                        # Single task status
-                                        awt status <task_id>
-
-                                        # All tasks
-                                        awt status
-                                        ```
-
-                                        ### View Logs
-
-                                        ```bash
-                                        awt logs <task_id>
-                                        ```
-
-                                        ### Export Task Data
-
-                                        ```bash
-                                        awt export <task_id> --format json|yaml|markdown
-                                        ```
-
-                                        ## API Reference
-
-                                        ### WorkflowStateManager
-
-                                        ```python
-                                        from src.workflow.state_manager import WorkflowStateManager, WorkflowState, Task
-
-                                        # Initialize with database path
-                                        manager = WorkflowStateManager("workflow.db")
-
-                                        # Create task
-                                        task = manager.create_task("Task Name", "Description")
-
-                                        # Get task
-                                        task = manager.get_task(task_id)
-
-                                        # Transition state
-                                        task = manager.transition_state(task_id, WorkflowState.TEST_FAIL)
-
-                                        # Update content
-                                        task = manager.update_task_content(
-                                                task_id,
-                                                    spec="Specification",
-                                                        tests="Tests",
-                                                            code="Code"
-                                        )
-
-                                        # List all tasks
-                                        tasks = manager.list_tasks()
-
-                                        # Get transition logs
-                                        logs = manager.get_transition_logs(task_id)
-                                        ```
-
-                                        ## A2A Protocol
-
-                                        The system uses a JSON-based Agent-to-Agent (A2A) protocol with the following message types:
-
-                                        - **task_assignment**: Assign task to agent
-                                        - **status_update**: Report progress
-                                        - **result_submission**: Submit completed work
-                                        - **certification_request**: Request certification
-                                        - **certification_result**: Certification decision
-
-                                        ## Security Considerations
-
-                                        - All credentials stored in `.env` file (not committed to version control)
-                                        - SQLite database with file-based access control
-                                        - No external API calls without explicit user consent
-                                        - Local LLM inference via Ollama
-
-                                        ## Performance
-
-                                        - SQLite operations: <50ms average
-                                        - State transitions: <100ms
-                                        - Task listing: <50ms for 1000+ tasks
-                                        - Memory footprint: <100MB idle
-                                        
-                                        ## Development
-                                        
-                                        ```bash
-                                        # Run tests
-                                        pytest tests/ -v --cov=src
-                                        
-                                        # Format code
-                                        black src/ tests/
-                                        
-                                        # Lint code
-                                        ruff check src/ tests/
-                                        
-                                        # Type checking
-                                        mypy src/
-                                        ```
-                                        
-                                        ## License
-                                        
-                                        MIT License - see LICENSE file for details.
-                                        
-                                        ## Contributing
-                                        
-                                        1. Fork the repository
-                                        2. Create feature branch
-                                        3. Write tests
-                                        4. Implement feature
-                                        5. Ensure all tests pass
-                                        6. Submit pull request
-                                        >>>>
-                                        )
+MIT
