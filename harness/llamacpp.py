@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Optional
 import httpx
+import json
 import logging
 import os
 
@@ -133,7 +134,6 @@ class LlamaCppBackend(ModelBackend):
                     raw = line[6:].strip()
                     if raw == "[DONE]":
                         break
-                    import json
                     try:
                         data = json.loads(raw)
                         delta = data["choices"][0].get("delta", {})

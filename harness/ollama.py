@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Optional
 import httpx
+import json
 import logging
 
 from .registry import BackendType, ModelBackend, ModelInfo
@@ -92,8 +93,10 @@ class OllamaBackend(ModelBackend):
                 async for line in resp.aiter_lines():
                     if not line:
                         continue
-                    import json
-                    data = json.loads(line)
+                    try:
+                        data = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
                     token = data.get("response", "")
                     if token:
                         yield token

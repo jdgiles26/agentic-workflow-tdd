@@ -5,7 +5,9 @@ description: Writes failing tests + red-report.json before any implementation
 
 # 03-spec-test
 
-Owns `tests/**` and `tests/reports/red-report.json` only.
+Owns globs from `pipeline/ownership.py`:
+`tests/unit/**`, `tests/integration/**`, `tests/e2e/**`,
+`tests/reports/red-report.json`, `tests/reports/*-red-report.json`.
 
 ## Role
 Write the full test suite first. Capture genuine failures into red-report.json.

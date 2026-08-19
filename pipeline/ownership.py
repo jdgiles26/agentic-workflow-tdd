@@ -21,7 +21,13 @@ OWNERSHIP: list[OwnershipRule] = [
     OwnershipRule("02-architecture", ("ARCHITECTURE.md", "ARD.md"), "architecture + decision log"),
     OwnershipRule(
         "03-spec-test",
-        ("tests/unit/**", "tests/integration/**", "tests/e2e/**", "tests/reports/red-report.json"),
+        (
+            "tests/unit/**",
+            "tests/integration/**",
+            "tests/e2e/**",
+            "tests/reports/red-report.json",
+            "tests/reports/*-red-report.json",
+        ),
         "all tests + red report",
     ),
     OwnershipRule("04-implementation", ("src/**",), "product code only – never tests"),

@@ -7,8 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from memory.state import WorkflowStore, WorkflowState, Task
-from pipeline.red_gate import is_valid_red_report, write_red_report
+from memory.state import WorkflowStore, WorkflowState
+from pipeline.red_gate import is_valid_red_report, write_red_report, run_controlled_pytest
 from harness.registry import ModelRegistry
 from harness.ollama import OllamaBackend
 from harness.llamacpp import LlamaCppBackend
@@ -55,14 +55,17 @@ class UpdateContentBody(BaseModel):
 
 
 class RedReportBody(BaseModel):
-    failures: list[dict] = Field(default_factory=list)
     mapped_ids: list[str] = Field(default_factory=list)
-    command: str = "pytest"
 
 
 @app.get("/api/tasks")
 def list_tasks(state: Optional[str] = None):
-    st = WorkflowState(state) if state else None
+    st = None
+    if state:
+        try:
+            st = WorkflowState(state)
+        except ValueError:
+            raise HTTPException(400, f"Invalid state filter: {state}")
     tasks = store.list(state=st)
     return [t.to_dict() for t in tasks]
 
@@ -108,8 +111,10 @@ def certify_task(task_id: str, body: CertifyBody):
         else:
             task = store.transition(task_id, WorkflowState.REJECTED, body.notes)
         return task.to_dict()
-    except Exception as e:
+    except ValueError as e:
         raise HTTPException(400, str(e))
+    except RuntimeError as e:
+        raise HTTPException(409, str(e))
 
 
 @app.patch("/api/tasks/{task_id}")
@@ -132,17 +137,28 @@ def update_task(task_id: str, body: UpdateContentBody):
 
 @app.post("/api/tasks/{task_id}/red-report")
 def attach_red_report(task_id: str, body: RedReportBody):
+    """Generate a red report from a server-controlled pytest run of the task tests."""
     task = store.get(task_id)
     if not task:
         raise HTTPException(404, "Task not found")
+    try:
+        evidence = run_controlled_pytest(task.tests)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
     path = f"tests/reports/{task_id}-red-report.json"
-    write_red_report(path, body.failures, body.mapped_ids, body.command)
+    write_red_report(
+        path,
+        evidence["failures"],
+        body.mapped_ids or evidence["mapped_ids"],
+        evidence["command"],
+        exit_status=evidence["exit_status"],
+    )
     if not is_valid_red_report(path):
-        raise HTTPException(400, "Invalid red report (must contain real failures)")
+        raise HTTPException(400, "Invalid red report (pytest did not produce failing evidence)")
     task = store.update_content(task_id, red_report_path=path)
     if task.state == WorkflowState.SPEC:
         task = store.transition(task_id, WorkflowState.TEST_FAIL, "red-report attached")
-    return task.to_dict()
+    return {**task.to_dict(), "pytest_stdout": evidence.get("stdout", "")}
 
 
 @app.get("/api/models")
